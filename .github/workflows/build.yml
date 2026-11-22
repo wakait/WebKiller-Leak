@@ -95,35 +95,24 @@ jobs:
       - name: Build Chinese release notes
         shell: bash
         run: |
-          cat .github/release-notes-zh.md > RELEASE_NOTES.md
-          cat >> RELEASE_NOTES.md <<EOF
-
-## 本次版本
-
-- **版本号**：\`${{ github.ref_name }}\`
-- **提交**：\`${{ github.sha }}\`
-- **发布日期**：$(date -u +'%Y-%m-%d %H:%M:%S UTC')
-
-## 发行产物
-
-EOF
-          for file in dist/*; do
-            base="$(basename "$file")"
-            if [ "$base" = "SHA256SUMS.txt" ]; then
-              continue
-            fi
-            echo "- \`${base}\`" >> RELEASE_NOTES.md
-          done
-          cat >> RELEASE_NOTES.md <<'EOF'
-
-## SHA256 校验和
-
-```text
-EOF
-          cat dist/SHA256SUMS.txt >> RELEASE_NOTES.md
-          cat >> RELEASE_NOTES.md <<'EOF'
-```
-EOF
+          cp .github/release-notes-zh.md RELEASE_NOTES.md
+          {
+            printf '\n## 本次版本\n\n'
+            printf -- '- **版本号**：`%s`\n' "${{ github.ref_name }}"
+            printf -- '- **提交**：`%s`\n' "${{ github.sha }}"
+            printf -- '- **发布日期**：%s\n' "$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            printf '\n## 发行产物\n\n'
+            for file in dist/*; do
+              base="$(basename "$file")"
+              if [ "$base" = "SHA256SUMS.txt" ]; then
+                continue
+              fi
+              printf -- '- `%s`\n' "$base"
+            done
+            printf '\n## SHA256 校验和\n\n```text\n'
+            cat dist/SHA256SUMS.txt
+            printf '```\n'
+          } >> RELEASE_NOTES.md
       - name: Publish release
         shell: bash
         run: |
